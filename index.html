@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Safe Bite - Home</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Link to PWA manifest -->
+  <link rel="manifest" href="manifest.json">
+  <!-- Theme color for mobile browsers -->
+  <meta name="theme-color" content="#ff5722">
+</head>
+<body>
+  <header>
+    <h1>Safe Bite 🍢</h1>
+    <p>Eat smart. Eat safe.</p>
+  </header>
+
+  <main class="home">
+    <h2>Welcome to Safe Bite</h2>
+    <p>Select your view:</p>
+    <div class="home-buttons">
+      <a href="vendor.html" class="btn">Vendor Dashboard</a>
+      <a href="consumer.html" class="btn">Consumer View</a>
+    </div>
+  </main>
+
+  <!-- Register service worker -->
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("service-worker.js")
+        .then(() => console.log("✅ Service Worker registered"))
+        .catch(err => console.error("Service Worker failed:", err));
+    }
+  </script>
+</body>
+</html>

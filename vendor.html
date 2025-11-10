@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Safe Bite - Vendor</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+</head>
+<body>
+  <header>
+    <h1>Vendor Dashboard 🛒</h1>
+    <nav><a href="index.html">🏠 Home</a> | <a href="consumer.html">Consumer View</a></nav>
+  </header>
+
+  <main>
+    <section id="vendor-form">
+      <h2>Add Vendor Details</h2>
+      <input type="text" id="vendorName" placeholder="Vendor Name" />
+      <input type="text" id="shopName" placeholder="Shop Name" />
+      <input type="text" id="location" placeholder="Location" />
+
+      <div id="ingredientsContainer">
+        <input type="text" placeholder="Ingredient" class="ingredient" />
+        <input type="text" placeholder="Brand" class="brand" />
+        <input type="date" class="expiry" />
+      </div>
+      <button onclick="addIngredientField()">+ Add More Ingredient</button>
+
+      <div id="menuContainer">
+        <input type="text" placeholder="Menu Item" class="menuItem" />
+        <input type="text" placeholder="Price" class="menuPrice" />
+      </div>
+      <button onclick="addMenuField()">+ Add More Menu Item</button>
+
+      <input type="file" id="oilPhoto" />
+      <button onclick="addVendor()">Upload Vendor</button>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("service-worker.js")
+    .then(() => console.log("Service Worker registered"));
+}
+</script>
+</html>
