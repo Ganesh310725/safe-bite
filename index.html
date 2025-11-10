@@ -3,85 +3,37 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Safe Bite</title>
+  <title>Safe Bite 🚀</title>
 
   <!-- Styles -->
   <link rel="stylesheet" href="style.css" />
 
   <!-- Manifest for installability -->
   <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#4CAF50" />
+  <meta name="theme-color" content="#FF5722" />
 </head>
 <body>
-  <header>
-    <h1>Safe Bite</h1>
-    <p>Report unsafe food products instantly</p>
+  <header style="background-color: #FF5722; color: white; padding: 1rem; text-align: center;">
+    <h1>Safe Bite 🚀</h1>
+    <p>Eat smart. Eat safe.</p>
   </header>
 
-  <main>
-    <form id="reportForm">
-      <label for="vendor">Vendor Name:</label>
-      <input type="text" id="vendor" name="vendor" required />
+  <main style="text-align: center; margin-top: 2rem;">
+    <h2>Welcome to Safe Bite</h2>
+    <p>Select your view:</p>
 
-      <label for="issue">Issue:</label>
-      <input type="text" id="issue" name="issue" required />
-
-      <button type="submit">Submit Report</button>
-    </form>
-
-    <h2>Live Reports</h2>
-    <ul id="reportsList"></ul>
+    <div style="margin-top: 1.5rem;">
+      <a href="vendor.html">
+        <button style="padding: 1rem 2rem; margin: 0.5rem; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">
+          Vendor Dashboard
+        </button>
+      </a>
+      <a href="consumer.html">
+        <button style="padding: 1rem 2rem; margin: 0.5rem; background-color: #2196F3; color: white; border: none; border-radius: 5px;">
+          Consumer View
+        </button>
+      </a>
+    </div>
   </main>
-
-  <!-- Firebase SDKs (compat version for simplicity) -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
-
-  <script>
-    // Your Firebase configuration (replace with actual values from Firebase Console)
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "safe-bite-25f79.firebaseapp.com",
-      projectId: "safe-bite-25f79",
-      storageBucket: "safe-bite-25f79.appspot.com",
-      messagingSenderId: "892177818677",
-      appId: "1:892177818677:web:4d6a683e3702d19f3cbd7c",
-      measurementId: "G-6EJM88BCJG"
-    };
-
-    // Initialize Firebase
-    const app = firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-
-    // Handle form submission
-    const reportForm = document.getElementById('reportForm');
-    const reportsList = document.getElementById('reportsList');
-
-    reportForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const vendor = e.target.vendor.value.trim();
-      const issue = e.target.issue.value.trim();
-
-      if (vendor && issue) {
-        await db.collection("reports").add({
-          vendor: vendor,
-          issue: issue,
-          timestamp: Date.now()
-        });
-        reportForm.reset();
-      }
-    });
-
-    // Live updates from Firestore
-    db.collection("reports").orderBy("timestamp", "desc").onSnapshot(snapshot => {
-      reportsList.innerHTML = "";
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        const li = document.createElement("li");
-        li.textContent = `${data.vendor} - ${data.issue}`;
-        reportsList.appendChild(li);
-      });
-    });
-  </script>
 </body>
 </html>
