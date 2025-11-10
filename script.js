@@ -1,9 +1,29 @@
-// Load vendors from localStorage
-let vendorList = JSON.parse(localStorage.getItem("vendors")) || [];
+// -------------------- Firebase Setup --------------------
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+import { getFirestore, collection, addDoc, onSnapshot, orderBy, query } 
+  from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+
+// Your Firebase config (replace with your own values)
+const firebaseConfig = {
+  apiKey: "AIzaSyAHGkMQNWkf9ercGpasUZZFhEyLtMlH-O8",
+  authDomain: "safe-bite-25f79.firebaseapp.com",
+  projectId: "safe-bite-25f79",
+  storageBucket: "safe-bite-25f79.firebasestorage.app",
+  messagingSenderId: "892177818677",
+  appId: "1:892177818677:web:4d6a683e3702d19f3cbd7c",
+  measurementId: "G-6EJM88BCJG"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// -------------------- Local State --------------------
+let vendorList = [];
 let editIndex = -1;
 
-// Add ingredient field dynamically
-function addIngredientField() {
+// -------------------- Dynamic Field Functions --------------------
+export function addIngredientField() {
   const container = document.getElementById("ingredientsContainer");
   container.innerHTML += `
     <input type="text" placeholder="Ingredient" class="ingredient" />
@@ -12,8 +32,7 @@ function addIngredientField() {
   `;
 }
 
-// Add menu field dynamically
-function addMenuField() {
+export function addMenuField() {
   const container = document.getElementById("menuContainer");
   container.innerHTML += `
     <input type="text" placeholder="Menu Item" class="menuItem" />
@@ -21,8 +40,8 @@ function addMenuField() {
   `;
 }
 
-// Add or update vendor
-function addVendor() {
+// -------------------- Add or Update Vendor --------------------
+export function addVendor() {
   const name = document.getElementById("vendorName").value;
   const shopName = document.getElementById("shopName").value;
   const location = document.getElementById("location").value;
@@ -58,7 +77,7 @@ function addVendor() {
     }
   }
 
-  const updateVendor = (photo) => {
+  const updateVendor = async (photo) => {
     const vendor = {
       name,
       shopName,
@@ -66,7 +85,8 @@ function addVendor() {
       ingredients,
       menu,
       oilPhoto: photo,
-      ratings: editIndex >= 0 ? vendorList[editIndex].ratings : []
+      ratings: editIndex >= 0 ? vendorList[editIndex].ratings : [],
+      timestamp: Date.now()
     };
 
     if (editIndex >= 0) {
@@ -76,7 +96,14 @@ function addVendor() {
       vendorList.push(vendor);
     }
 
-    localStorage.setItem("vendors", JSON.stringify(vendorList));
+    // Save to Firestore
+    try {
+      await addDoc(collection(db, "vendors"), vendor);
+      console.log("Vendor saved to Firestore:", vendor);
+    } catch (err) {
+      console.error("Error saving vendor:", err);
+    }
+
     displayVendors();
     clearForm();
   };
@@ -95,8 +122,8 @@ function addVendor() {
   }
 }
 
-// Display vendors (Consumer View)
-function displayVendors() {
+// -------------------- Display Vendors --------------------
+export function displayVendors() {
   const container = document.getElementById("vendorList");
   if (!container) return;
   container.innerHTML = "";
@@ -138,20 +165,10 @@ function displayVendors() {
       </div>
     `;
   });
-
-  document.querySelectorAll(".rating .star").forEach(star => {
-    star.addEventListener("click", function () {
-      const value = parseInt(this.getAttribute("data-value"));
-      const index = this.parentElement.getAttribute("data-index");
-      vendorList[index].ratings.push(value);
-      localStorage.setItem("vendors", JSON.stringify(vendorList));
-      displayVendors();
-    });
-  });
 }
 
-// Edit vendor
-function editVendor(index) {
+// -------------------- Edit Vendor --------------------
+export function editVendor(index) {
   const v = vendorList[index];
   editIndex = index;
 
@@ -179,15 +196,14 @@ function editVendor(index) {
   document.getElementById("oilPhoto").value = "";
 }
 
-// Delete vendor
-function deleteVendor(index) {
+// -------------------- Delete Vendor --------------------
+export function deleteVendor(index) {
   vendorList.splice(index, 1);
-  localStorage.setItem("vendors", JSON.stringify(vendorList));
   displayVendors();
 }
 
-// Clear form
-function clearForm() {
+// -------------------- Clear Form --------------------
+export function clearForm() {
   document.getElementById("vendorName").value = "";
   document.getElementById("shopName").value = "";
   document.getElementById("location").value = "";
@@ -203,7 +219,14 @@ function clearForm() {
   document.getElementById("oilPhoto").value = "";
 }
 
-// Auto-display vendors if on consumer page
+// -------------------- Firestore Sync --------------------
 window.onload = function () {
-  displayVendors();
+  const q = query(collection(db, "vendors"), orderBy("timestamp", "desc"));
+  onSnapshot(q, (snapshot) => {
+    vendorList = [];
+    snapshot.forEach(doc => {
+      vendorList.push(doc.data());
+    });
+    displayVendors();
+  });
 };
