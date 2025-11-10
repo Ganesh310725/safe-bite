@@ -1,10 +1,12 @@
 // -------------------- Firebase Setup --------------------
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy } 
-  from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+import {
+  getFirestore, collection, addDoc, setDoc, doc,
+  deleteDoc, onSnapshot, query, orderBy
+} from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
+  apiKey: "AIzaSyAHGkMQNWkf9ercGpasUZZFhEyLtMlH-O8",
   authDomain: "safe-bite-25f79.firebaseapp.com",
   projectId: "safe-bite-25f79",
   storageBucket: "safe-bite-25f79.appspot.com",
@@ -72,22 +74,28 @@ export function addVendor() {
   }
 
   const updateVendor = async (photo) => {
-    const vendor = {
+    const vendorData = {
       name,
       shopName,
       location,
       ingredients,
       menu,
       oilPhoto: photo,
-      ratings: [],
+      ratings: editIndex >= 0 ? vendorList[editIndex].ratings : [],
       timestamp: Date.now()
     };
 
     try {
-      await addDoc(collection(db, "vendors"), vendor);
-      console.log("Vendor added to Firestore");
+      if (editIndex >= 0) {
+        const vendor = vendorList[editIndex];
+        const docRef = doc(db, "vendors", vendor.id);
+        await setDoc(docRef, vendorData);
+        editIndex = -1;
+      } else {
+        await addDoc(collection(db, "vendors"), vendorData);
+      }
     } catch (err) {
-      console.error("Error adding vendor:", err);
+      console.error("Error saving vendor:", err);
     }
 
     clearForm();
@@ -98,7 +106,12 @@ export function addVendor() {
     reader.onload = () => updateVendor(reader.result);
     reader.readAsDataURL(oilPhotoInput.files[0]);
   } else {
-    alert("Please upload an oil photo");
+    const existingPhoto = editIndex >= 0 ? vendorList[editIndex].oilPhoto : null;
+    if (!existingPhoto) {
+      alert("Please upload an oil photo");
+      return;
+    }
+    updateVendor(existingPhoto);
   }
 }
 
@@ -140,6 +153,7 @@ export function displayVendors() {
           <span class="star" data-value="5">&#9733;</span>
           <p>Average Rating: ${avgRating}</p>
         </div>
+        <button onclick="editVendor(${index})">✏️ Edit</button>
       </div>
     `;
   });
@@ -152,6 +166,35 @@ export function displayVendors() {
       displayVendors();
     });
   });
+}
+
+// -------------------- Edit Vendor --------------------
+export function editVendor(index) {
+  const v = vendorList[index];
+  editIndex = index;
+
+  document.getElementById("vendorName").value = v.name;
+  document.getElementById("shopName").value = v.shopName;
+  document.getElementById("location").value = v.location;
+
+  document.getElementById("ingredientsContainer").innerHTML = "";
+  v.ingredients.forEach(i => {
+    document.getElementById("ingredientsContainer").innerHTML += `
+      <input type="text" class="ingredient" value="${i.item}" />
+      <input type="text" class="brand" value="${i.brand}" />
+      <input type="date" class="expiry" value="${i.expiry}" />
+    `;
+  });
+
+  document.getElementById("menuContainer").innerHTML = "";
+  v.menu.forEach(m => {
+    document.getElementById("menuContainer").innerHTML += `
+      <input type="text" class="menuItem" value="${m.item}" />
+      <input type="text" class="menuPrice" value="${m.price}" />
+    `;
+  });
+
+  document.getElementById("oilPhoto").value = "";
 }
 
 // -------------------- Clear Form --------------------
@@ -177,8 +220,8 @@ window.onload = function () {
   onSnapshot(q, (snapshot) => {
     vendorList = [];
     snapshot.forEach(doc => {
-      vendorList.push(doc.data());
+      const data = doc.data();
+      data.id = doc.id; // 🔥 track Firestore ID
+      vendorList.push(data);
     });
-    displayVendors();
-  });
-};
+    displayV
