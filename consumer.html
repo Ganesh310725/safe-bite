@@ -1,16 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Safe Bite - Consumer</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="manifest" href="manifest.json">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Consumer View | Safe Bite</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#FF5722" />
 </head>
 <body>
   <header>
     <h1>Consumer View 👥</h1>
-    <nav><a href="index.html">🏠 Home</a> | <a href="vendor.html">Vendor Dashboard</a></nav>
+    <nav>
+      <a href="index.html">🏠 Home</a> |
+      <a href="vendor.html">Vendor Dashboard</a>
+    </nav>
   </header>
 
   <main>
@@ -20,12 +24,15 @@
     </section>
   </main>
 
-  <script src="script.js"></script>
+  <!-- Firebase-powered script -->
+  <script type="module" src="script.js"></script>
+
+  <!-- Service worker for installability -->
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("service-worker.js")
+        .then(() => console.log("✅ Service Worker registered"));
+    }
+  </script>
 </body>
-<script>
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("service-worker.js")
-    .then(() => console.log("Service Worker registered"));
-}
-</script>
 </html>
