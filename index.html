@@ -1,37 +1,87 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Safe Bite - Home</title>
-  <link rel="stylesheet" href="style.css">
-  <!-- Link to PWA manifest -->
-  <link rel="manifest" href="manifest.json">
-  <!-- Theme color for mobile browsers -->
-  <meta name="theme-color" content="#ff5722">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Safe Bite</title>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Manifest for installability -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#4CAF50" />
 </head>
 <body>
   <header>
-    <h1>Safe Bite 🍢</h1>
-    <p>Eat smart. Eat safe.</p>
+    <h1>Safe Bite</h1>
+    <p>Report unsafe food products instantly</p>
   </header>
 
-  <main class="home">
-    <h2>Welcome to Safe Bite</h2>
-    <p>Select your view:</p>
-    <div class="home-buttons">
-      <a href="vendor.html" class="btn">Vendor Dashboard</a>
-      <a href="consumer.html" class="btn">Consumer View</a>
-    </div>
+  <main>
+    <form id="reportForm">
+      <label for="vendor">Vendor Name:</label>
+      <input type="text" id="vendor" name="vendor" required />
+
+      <label for="issue">Issue:</label>
+      <input type="text" id="issue" name="issue" required />
+
+      <button type="submit">Submit Report</button>
+    </form>
+
+    <h2>Live Reports</h2>
+    <ul id="reportsList"></ul>
   </main>
 
-  <!-- Register service worker -->
+  <!-- Firebase SDKs (compat version for simplicity) -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+
   <script>
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("service-worker.js")
-        .then(() => console.log("✅ Service Worker registered"))
-        .catch(err => console.error("Service Worker failed:", err));
-    }
+    // Your Firebase configuration (replace with actual values from Firebase Console)
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "safe-bite-25f79.firebaseapp.com",
+      projectId: "safe-bite-25f79",
+      storageBucket: "safe-bite-25f79.appspot.com",
+      messagingSenderId: "892177818677",
+      appId: "1:892177818677:web:4d6a683e3702d19f3cbd7c",
+      measurementId: "G-6EJM88BCJG"
+    };
+
+    // Initialize Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // Handle form submission
+    const reportForm = document.getElementById('reportForm');
+    const reportsList = document.getElementById('reportsList');
+
+    reportForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const vendor = e.target.vendor.value.trim();
+      const issue = e.target.issue.value.trim();
+
+      if (vendor && issue) {
+        await db.collection("reports").add({
+          vendor: vendor,
+          issue: issue,
+          timestamp: Date.now()
+        });
+        reportForm.reset();
+      }
+    });
+
+    // Live updates from Firestore
+    db.collection("reports").orderBy("timestamp", "desc").onSnapshot(snapshot => {
+      reportsList.innerHTML = "";
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const li = document.createElement("li");
+        li.textContent = `${data.vendor} - ${data.issue}`;
+        reportsList.appendChild(li);
+      });
+    });
   </script>
 </body>
 </html>
