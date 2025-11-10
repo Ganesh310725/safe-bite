@@ -1,8 +1,7 @@
-// -------------------- Firebase Setup --------------------
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
 import {
   getFirestore, collection, addDoc, setDoc, doc,
-  deleteDoc, onSnapshot, query, orderBy
+  onSnapshot, query, orderBy
 } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -18,12 +17,11 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// -------------------- Local State --------------------
 let vendorList = [];
 let editIndex = -1;
 
-// -------------------- Dynamic Field Functions --------------------
-export function addIngredientField() {
+// Add ingredient field
+function addIngredientField() {
   document.getElementById("ingredientsContainer").innerHTML += `
     <input type="text" placeholder="Ingredient" class="ingredient" />
     <input type="text" placeholder="Brand" class="brand" />
@@ -31,19 +29,21 @@ export function addIngredientField() {
   `;
 }
 
-export function addMenuField() {
+// Add menu field
+function addMenuField() {
   document.getElementById("menuContainer").innerHTML += `
     <input type="text" placeholder="Menu Item" class="menuItem" />
     <input type="text" placeholder="Price" class="menuPrice" />
   `;
 }
 
-// -------------------- Add or Update Vendor --------------------
-export function addVendor() {
+// Add or update vendor
+function addVendor() {
   const name = document.getElementById("vendorName").value;
   const shopName = document.getElementById("shopName").value;
   const location = document.getElementById("location").value;
   const oilPhotoInput = document.getElementById("oilPhoto");
+  const shopPhotoInput = document.getElementById("shopPhoto");
 
   const ingredientEls = document.querySelectorAll(".ingredient");
   const brandEls = document.querySelectorAll(".brand");
@@ -73,50 +73,70 @@ export function addVendor() {
     }
   }
 
-  const updateVendor = async (photo) => {
-    const vendorData = {
-      name,
-      shopName,
-      location,
-      ingredients,
-      menu,
-      oilPhoto: photo,
-      ratings: editIndex >= 0 ? vendorList[editIndex].ratings : [],
-      timestamp: Date.now()
-    };
+  const reader1 = new FileReader();
+  const reader2 = new FileReader();
 
-    try {
-      if (editIndex >= 0) {
-        const vendor = vendorList[editIndex];
-        const docRef = doc(db, "vendors", vendor.id);
-        await setDoc(docRef, vendorData);
-        editIndex = -1;
-      } else {
-        await addDoc(collection(db, "vendors"), vendorData);
+  reader1.onload = () => {
+    const oilPhoto = reader1.result;
+    reader2.onload = async () => {
+      const shopPhoto = reader2.result;
+
+      const vendorData = {
+        name,
+        shopName,
+        location,
+        ingredients,
+        menu,
+        oilPhoto,
+        shopPhoto,
+        ratings: editIndex >= 0 ? vendorList[editIndex].ratings : [],
+        timestamp: Date.now()
+      };
+
+      try {
+        if (editIndex >= 0) {
+          const vendor = vendorList[editIndex];
+          const docRef = doc(db, "vendors", vendor.id);
+          await setDoc(docRef, vendorData);
+          editIndex = -1;
+        } else {
+          await addDoc(collection(db, "vendors"), vendorData);
+        }
+      } catch (err) {
+        console.error("Error saving vendor:", err);
       }
-    } catch (err) {
-      console.error("Error saving vendor:", err);
-    }
 
-    clearForm();
+      clearForm();
+    };
+    reader2.readAsDataURL(shopPhotoInput.files[0]);
   };
 
-  if (oilPhotoInput && oilPhotoInput.files.length > 0) {
-    const reader = new FileReader();
-    reader.onload = () => updateVendor(reader.result);
-    reader.readAsDataURL(oilPhotoInput.files[0]);
+  if (oilPhotoInput.files.length && shopPhotoInput.files.length) {
+    reader1.readAsDataURL(oilPhotoInput.files[0]);
   } else {
-    const existingPhoto = editIndex >= 0 ? vendorList[editIndex].oilPhoto : null;
-    if (!existingPhoto) {
-      alert("Please upload an oil photo");
-      return;
-    }
-    updateVendor(existingPhoto);
+    alert("Please upload both shop and oil photos");
   }
 }
 
-// -------------------- Display Vendors --------------------
-export function displayVendors() {
+// Clear form
+function clearForm() {
+  document.getElementById("vendorName").value = "";
+  document.getElementById("shopName").value = "";
+  document.getElementById("location").value = "";
+  document.getElementById("ingredientsContainer").innerHTML = `
+    <input type="text" placeholder="Ingredient" class="ingredient" />
+    <input type="text" placeholder="Brand" class="brand" />
+    <input type="date" class="expiry" />
+  `;
+  document.getElementById("menuContainer").innerHTML = `
+    <input type="text" placeholder="Menu Item" class="menuItem" />
+    <input type="text" placeholder="Price" class="menuPrice" />
+  `;
+  document.getElementById("oilPhoto").value = "";
+  document.getElementById("shopPhoto").value = "";
+}
+// Display vendors
+function displayVendors() {
   const container = document.getElementById("vendorList");
   if (!container) return;
   container.innerHTML = "";
@@ -141,10 +161,16 @@ export function displayVendors() {
         <h3>${v.name}</h3>
         <p><strong>Shop:</strong> ${v.shopName}</p>
         <p><strong>Location:</strong> ${v.location}</p>
+
+        <p><strong>Shop Photo:</strong></p>
+        <img src="${v.shopPhoto}" style="width:100%; max-width:600px; border-radius:10px; margin-bottom:1rem;" />
+
         <ul><strong>Ingredients:</strong> ${ingredientHTML}</ul>
         <ul><strong>Menu:</strong> ${menuHTML}</ul>
+
         <p><strong>Oil Change Photo:</strong></p>
-        <img src="${v.oilPhoto}" width="100%" />
+        <img src="${v.oilPhoto}" style="width:100%; max-width:600px; border-radius:10px;" />
+
         <div class="rating" data-index="${index}">
           <span class="star" data-value="1">&#9733;</span>
           <span class="star" data-value="2">&#9733;</span>
@@ -153,6 +179,7 @@ export function displayVendors() {
           <span class="star" data-value="5">&#9733;</span>
           <p>Average Rating: ${avgRating}</p>
         </div>
+
         <button onclick="editVendor(${index})">✏️ Edit</button>
       </div>
     `;
@@ -168,8 +195,8 @@ export function displayVendors() {
   });
 }
 
-// -------------------- Edit Vendor --------------------
-export function editVendor(index) {
+// Edit vendor
+function editVendor(index) {
   const v = vendorList[index];
   editIndex = index;
 
@@ -195,33 +222,25 @@ export function editVendor(index) {
   });
 
   document.getElementById("oilPhoto").value = "";
+  document.getElementById("shopPhoto").value = "";
 }
 
-// -------------------- Clear Form --------------------
-export function clearForm() {
-  document.getElementById("vendorName").value = "";
-  document.getElementById("shopName").value = "";
-  document.getElementById("location").value = "";
-  document.getElementById("ingredientsContainer").innerHTML = `
-    <input type="text" placeholder="Ingredient" class="ingredient" />
-    <input type="text" placeholder="Brand" class="brand" />
-    <input type="date" class="expiry" />
-  `;
-  document.getElementById("menuContainer").innerHTML = `
-    <input type="text" placeholder="Menu Item" class="menuItem" />
-    <input type="text" placeholder="Price" class="menuPrice" />
-  `;
-  document.getElementById("oilPhoto").value = "";
-}
-
-// -------------------- Firestore Sync --------------------
+// Firestore sync
 window.onload = function () {
   const q = query(collection(db, "vendors"), orderBy("timestamp", "desc"));
   onSnapshot(q, (snapshot) => {
     vendorList = [];
     snapshot.forEach(doc => {
       const data = doc.data();
-      data.id = doc.id; // 🔥 track Firestore ID
+      data.id = doc.id;
       vendorList.push(data);
     });
-    displayV
+    displayVendors();
+  });
+};
+
+// Expose functions globally
+window.addVendor = addVendor;
+window.addIngredientField = addIngredientField;
+window.addMenuField = addMenuField;
+window.editVendor = editVendor;
