@@ -3,37 +3,34 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Safe Bite 🚀</title>
-
-  <!-- Styles -->
+  <title>Safe Bite | Home</title>
   <link rel="stylesheet" href="style.css" />
-
-  <!-- Manifest for installability -->
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#FF5722" />
 </head>
 <body>
-  <header style="background-color: #FF5722; color: white; padding: 1rem; text-align: center;">
-    <h1>Safe Bite 🚀</h1>
-    <p>Eat smart. Eat safe.</p>
+  <header>
+    <h1>Welcome to Safe Bite 🍽️</h1>
+    <p>Your trusted platform for food safety and vendor transparency</p>
   </header>
 
-  <main style="text-align: center; margin-top: 2rem;">
-    <h2>Welcome to Safe Bite</h2>
-    <p>Select your view:</p>
-
-    <div style="margin-top: 1.5rem;">
+  <main>
+    <section style="text-align:center; margin-top:2rem;">
       <a href="vendor.html">
-        <button style="padding: 1rem 2rem; margin: 0.5rem; background-color: #4CAF50; color: white; border: none; border-radius: 5px;">
-          Vendor Dashboard
-        </button>
+        <button style="margin:1rem;">🧑‍🍳 Vendor Dashboard</button>
       </a>
       <a href="consumer.html">
-        <button style="padding: 1rem 2rem; margin: 0.5rem; background-color: #2196F3; color: white; border: none; border-radius: 5px;">
-          Consumer View
-        </button>
+        <button style="margin:1rem;">👥 Consumer View</button>
       </a>
-    </div>
+    </section>
   </main>
+
+  <!-- Service worker for installability -->
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("service-worker.js")
+        .then(() => console.log("✅ Service Worker registered"));
+    }
+  </script>
 </body>
 </html>
