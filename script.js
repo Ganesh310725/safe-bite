@@ -1,20 +1,18 @@
 // -------------------- Firebase Setup --------------------
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, orderBy, query } 
+import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy } 
   from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
-// Your Firebase config (replace with your own values)
 const firebaseConfig = {
-  apiKey: "AIzaSyAHGkMQNWkf9ercGpasUZZFhEyLtMlH-O8",
+  apiKey: "YOUR_API_KEY",
   authDomain: "safe-bite-25f79.firebaseapp.com",
   projectId: "safe-bite-25f79",
-  storageBucket: "safe-bite-25f79.firebasestorage.app",
+  storageBucket: "safe-bite-25f79.appspot.com",
   messagingSenderId: "892177818677",
   appId: "1:892177818677:web:4d6a683e3702d19f3cbd7c",
   measurementId: "G-6EJM88BCJG"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
@@ -24,8 +22,7 @@ let editIndex = -1;
 
 // -------------------- Dynamic Field Functions --------------------
 export function addIngredientField() {
-  const container = document.getElementById("ingredientsContainer");
-  container.innerHTML += `
+  document.getElementById("ingredientsContainer").innerHTML += `
     <input type="text" placeholder="Ingredient" class="ingredient" />
     <input type="text" placeholder="Brand" class="brand" />
     <input type="date" class="expiry" />
@@ -33,8 +30,7 @@ export function addIngredientField() {
 }
 
 export function addMenuField() {
-  const container = document.getElementById("menuContainer");
-  container.innerHTML += `
+  document.getElementById("menuContainer").innerHTML += `
     <input type="text" placeholder="Menu Item" class="menuItem" />
     <input type="text" placeholder="Price" class="menuPrice" />
   `;
@@ -54,7 +50,6 @@ export function addVendor() {
   const menuItemEls = document.querySelectorAll(".menuItem");
   const menuPriceEls = document.querySelectorAll(".menuPrice");
 
-  // Collect ingredients
   const ingredients = [];
   for (let i = 0; i < ingredientEls.length; i++) {
     if (ingredientEls[i].value && brandEls[i].value && expiryEls[i].value) {
@@ -66,7 +61,6 @@ export function addVendor() {
     }
   }
 
-  // Collect menu
   const menu = [];
   for (let i = 0; i < menuItemEls.length; i++) {
     if (menuItemEls[i].value && menuPriceEls[i].value) {
@@ -85,26 +79,17 @@ export function addVendor() {
       ingredients,
       menu,
       oilPhoto: photo,
-      ratings: editIndex >= 0 ? vendorList[editIndex].ratings : [],
+      ratings: [],
       timestamp: Date.now()
     };
 
-    if (editIndex >= 0) {
-      vendorList[editIndex] = vendor;
-      editIndex = -1;
-    } else {
-      vendorList.push(vendor);
-    }
-
-    // Save to Firestore
     try {
       await addDoc(collection(db, "vendors"), vendor);
-      console.log("Vendor saved to Firestore:", vendor);
+      console.log("Vendor added to Firestore");
     } catch (err) {
-      console.error("Error saving vendor:", err);
+      console.error("Error adding vendor:", err);
     }
 
-    displayVendors();
     clearForm();
   };
 
@@ -113,12 +98,7 @@ export function addVendor() {
     reader.onload = () => updateVendor(reader.result);
     reader.readAsDataURL(oilPhotoInput.files[0]);
   } else {
-    const existingPhoto = editIndex >= 0 ? vendorList[editIndex].oilPhoto : null;
-    if (!existingPhoto) {
-      alert("Please upload an oil photo");
-      return;
-    }
-    updateVendor(existingPhoto);
+    alert("Please upload an oil photo");
   }
 }
 
@@ -129,7 +109,7 @@ export function displayVendors() {
   container.innerHTML = "";
 
   vendorList.forEach((v, index) => {
-    const avgRating = v.ratings.length
+    const avgRating = v.ratings?.length
       ? (v.ratings.reduce((a, b) => a + b, 0) / v.ratings.length).toFixed(1)
       : "No ratings yet";
 
@@ -160,46 +140,18 @@ export function displayVendors() {
           <span class="star" data-value="5">&#9733;</span>
           <p>Average Rating: ${avgRating}</p>
         </div>
-        <button onclick="editVendor(${index})">✏️ Edit</button>
-        <button onclick="deleteVendor(${index})">🗑️ Delete</button>
       </div>
     `;
   });
-}
 
-// -------------------- Edit Vendor --------------------
-export function editVendor(index) {
-  const v = vendorList[index];
-  editIndex = index;
-
-  document.getElementById("vendorName").value = v.name;
-  document.getElementById("shopName").value = v.shopName;
-  document.getElementById("location").value = v.location;
-
-  document.getElementById("ingredientsContainer").innerHTML = "";
-  v.ingredients.forEach(i => {
-    document.getElementById("ingredientsContainer").innerHTML += `
-      <input type="text" class="ingredient" value="${i.item}" />
-      <input type="text" class="brand" value="${i.brand}" />
-      <input type="date" class="expiry" value="${i.expiry}" />
-    `;
+  document.querySelectorAll(".rating .star").forEach(star => {
+    star.addEventListener("click", function () {
+      const value = parseInt(this.getAttribute("data-value"));
+      const index = this.parentElement.getAttribute("data-index");
+      vendorList[index].ratings.push(value);
+      displayVendors();
+    });
   });
-
-  document.getElementById("menuContainer").innerHTML = "";
-  v.menu.forEach(m => {
-    document.getElementById("menuContainer").innerHTML += `
-      <input type="text" class="menuItem" value="${m.item}" />
-      <input type="text" class="menuPrice" value="${m.price}" />
-    `;
-  });
-
-  document.getElementById("oilPhoto").value = "";
-}
-
-// -------------------- Delete Vendor --------------------
-export function deleteVendor(index) {
-  vendorList.splice(index, 1);
-  displayVendors();
 }
 
 // -------------------- Clear Form --------------------
